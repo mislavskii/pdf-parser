@@ -1,3 +1,4 @@
+import os
 import pymupdf as pmp
 from PIL import Image
 import pathlib
@@ -7,7 +8,7 @@ import tempfile
 
 import pytesseract
 
-from utils import ExtractedImage
+from .utils import ExtractedImage
 
 
 class PdfParser:
@@ -32,6 +33,22 @@ class PdfParser:
             image_ext = base_image["ext"]
             images.append(ExtractedImage(image_bytes, page_num, xref, image_ext))
         return images
+    
+    def save_to_files(self):
+        output_dir = self.pdf_path.replace('.pdf', '')
+        os.makedirs(output_dir, exist_ok=True)
+        for page_num in range(len(self.doc)):
+            page_dir = os.path.join(output_dir, f"page_{str(page_num + 1).zfill(3)}")
+            os.makedirs(page_dir, exist_ok=True)
+            text = self.get_text(page_num)
+            text_path = os.path.join(page_dir, f"page_{page_num + 1}.txt")
+            with open(text_path, "w", encoding="utf-8") as f:
+                f.write(text)
+            images = self.get_images(page_num)
+            for image in images:
+                image_path = os.path.join(page_dir, f"image_{image.xref}.{image.extension}")
+                with open(image_path, "wb") as f:
+                    f.write(image.image)
 
 
 class PdfImageInserter:
