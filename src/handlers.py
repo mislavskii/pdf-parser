@@ -7,6 +7,8 @@ import tempfile
 
 import pytesseract
 
+from utils import ExtractedImage
+
 
 class PdfParser:
     def __init__(self, pdf_path):
@@ -28,7 +30,7 @@ class PdfParser:
             base_image = self.doc.extract_image(xref)
             image_bytes = base_image["image"]
             image_ext = base_image["ext"]
-            images.append(pix)
+            images.append(ExtractedImage(image_bytes, page_num, xref, image_ext))
         return images
 
 
