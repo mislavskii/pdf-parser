@@ -27,8 +27,8 @@ def extract_text_and_images(pdf_path):
             base_image = pdf_document.extract_image(xref)
             image_bytes = base_image["image"]
             image_ext = base_image["ext"]
-            # Save image as PNG
-            image_path = os.path.join(page_dir, f"image_{img_index + 1}.png")
+            # Save image
+            image_path = os.path.join(page_dir, f"image_{xref}.{image_ext}")
             with open(image_path, "wb") as img_file:
                 img_file.write(image_bytes)
         
@@ -37,7 +37,7 @@ def extract_text_and_images(pdf_path):
     print("Extraction complete.")
 
 # Example usage:
-pdf_path = "/media/mm/DEXP C100/User/Earn/Translate/Thai/Akulo/Doitech/2025.07.03 Company Affidavit.pdf"  # Path to your PDF
+pdf_path = "/media/mm/DEXP C100/User/Earn/Translate/Thai/Globica/Siberian Well/Fin2024/ФО+Аудит Таиланд 2024.pdf"  # Path to your PDF
 # output_dir = "cat_2025"  # Folder to save the results
 
 extract_text_and_images(pdf_path)
