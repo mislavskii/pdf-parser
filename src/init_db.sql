@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS pages (
     document_id INTEGER NOT NULL,
     page_number INTEGER NOT NULL,
     text_content TEXT,
+    ocr_result, TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (document_id) REFERENCES documents (id) ON DELETE CASCADE,
