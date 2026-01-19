@@ -26,9 +26,6 @@ CREATE TABLE IF NOT EXISTS extracted_images (
     xref INTEGER NOT NULL,
     extension TEXT NOT NULL,
     image_data BLOB,
-    width INTEGER,
-    height INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (page_id) REFERENCES pages (id) ON DELETE CASCADE
 );
 
