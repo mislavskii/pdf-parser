@@ -6,6 +6,9 @@ import multiprocessing
 from pdf2image import convert_from_path
 import tempfile
 
+import sqlite3
+from datetime import datetime
+
 import pytesseract
 
 from .utils import ExtractedImage
@@ -51,8 +54,6 @@ class PdfParser:
                     f.write(image.image)
 
     def persist_to_db(self):
-        import sqlite3
-        from datetime import datetime
         
         # Connect to the database
         conn = sqlite3.connect('db/database.db')
@@ -61,10 +62,9 @@ class PdfParser:
         try:
             # Insert document record
             file_name = os.path.basename(self.pdf_path)
-            file_size = os.path.getsize(self.pdf_path) if os.path.exists(self.pdf_path) else None
             
-            cursor.execute('INSERT OR IGNORE INTO documents (file_path, file_name, file_size) VALUES (?, ?, ?)',
-                           (self.pdf_path, file_name, file_size))
+            cursor.execute('INSERT OR IGNORE INTO documents (file_path, file_name) VALUES (?, ?)',
+                           (self.pdf_path, file_name))
             
             # Get the document ID
             cursor.execute('SELECT id FROM documents WHERE file_path = ?', (self.pdf_path,))

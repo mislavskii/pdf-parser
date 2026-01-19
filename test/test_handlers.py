@@ -125,8 +125,7 @@ class TestPdfParser:
 
     @patch('pymupdf.open')
     @patch('sqlite3.connect')
-    @patch('os.path.getsize')
-    def test_persist_to_db(self, mock_getsize, mock_sqlite_connect, mock_pmp_open,
+    def test_persist_to_db(self, mock_sqlite_connect, mock_pmp_open,
                          mock_doc, mock_page, mock_base_image):
         """Test persist_to_db method."""
         # Setup mocks
@@ -134,7 +133,6 @@ class TestPdfParser:
         mock_doc.load_page.return_value = mock_page
         mock_doc.__len__ = Mock(return_value=2)  # 2 pages for this test
         mock_doc.extract_image.return_value = mock_base_image
-        mock_getsize.return_value = 1024  # Mock file size
         
         # Mock page.get_images to return different images per page
         mock_page.get_images.side_effect = [
@@ -163,8 +161,8 @@ class TestPdfParser:
         
         # Check document insert
         mock_cursor.execute.assert_any_call(
-            'INSERT OR IGNORE INTO documents (file_path, file_name, file_size) VALUES (?, ?, ?)',
-            ('test.pdf', 'test.pdf', None)
+            'INSERT OR IGNORE INTO documents (file_path, file_name) VALUES (?, ?)',
+            ('test.pdf', 'test.pdf')
         )
         
         # Check page inserts

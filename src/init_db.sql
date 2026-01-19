@@ -4,10 +4,7 @@
 CREATE TABLE IF NOT EXISTS documents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     file_path TEXT NOT NULL UNIQUE,
-    file_name TEXT NOT NULL,
-    file_size INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    file_name TEXT NOT NULL
 );
 
 -- Table to store PDF pages
@@ -66,16 +63,9 @@ CREATE INDEX IF NOT EXISTS idx_processed_pdfs_document_id ON processed_pdfs(orig
 CREATE INDEX IF NOT EXISTS idx_translations_page_id ON text_translations(page_id);
 
 -- Trigger to update the updated_at timestamp
-CREATE TRIGGER IF NOT EXISTS update_documents_updated_at 
-    AFTER UPDATE ON documents
-    FOR EACH ROW 
-    BEGIN
-        UPDATE documents SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-    END;
-
-CREATE TRIGGER IF NOT EXISTS update_pages_updated_at 
+CREATE TRIGGER IF NOT EXISTS update_pages_updated_at
     AFTER UPDATE ON pages
-    FOR EACH ROW 
+    FOR EACH ROW
     BEGIN
         UPDATE pages SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
     END;
