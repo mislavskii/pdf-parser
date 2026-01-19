@@ -122,3 +122,73 @@ class TestPdfParser:
         image_handles = [call.return_value for call in mock_file_open.call_args_list if 'image' in str(call)]
         for handle in image_handles:
             handle.write.assert_called_with(b"fake_image_data")
+
+    @patch('pymupdf.open')
+    @patch('sqlite3.connect')
+    @patch('os.path.getsize')
+    def test_persist_to_db(self, mock_getsize, mock_sqlite_connect, mock_pmp_open,
+                         mock_doc, mock_page, mock_base_image):
+        """Test persist_to_db method."""
+        # Setup mocks
+        mock_pmp_open.return_value = mock_doc
+        mock_doc.load_page.return_value = mock_page
+        mock_doc.__len__ = Mock(return_value=2)  # 2 pages for this test
+        mock_doc.extract_image.return_value = mock_base_image
+        mock_getsize.return_value = 1024  # Mock file size
+        
+        # Mock page.get_images to return different images per page
+        mock_page.get_images.side_effect = [
+            [(1, 0, 0, 0, 0, 0, 0, 0, 0)],  # Page 0: 1 image
+            [(2, 0, 0, 0, 0, 0, 0, 0, 0)]   # Page 1: 1 image
+        ]
+        
+        # Mock database connection
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_sqlite_connect.return_value = mock_conn
+        mock_conn.cursor.return_value = mock_cursor
+        mock_cursor.fetchone.side_effect = [
+            [1],  # document_id
+            [1],  # page_id for page 1
+            [2]   # page_id for page 2
+        ]
+        
+        # Create parser and call persist_to_db
+        parser = PdfParser("test.pdf")
+        parser.persist_to_db()
+        
+        # Verify database operations
+        mock_sqlite_connect.assert_called_once_with('db/database.db')
+        assert mock_cursor.execute.call_count == 8  # 1 doc insert + 2 page inserts + 2 page selects + 2 image inserts + 1 commit
+        
+        # Check document insert
+        mock_cursor.execute.assert_any_call(
+            'INSERT OR IGNORE INTO documents (file_path, file_name, file_size) VALUES (?, ?, ?)',
+            ('test.pdf', 'test.pdf', None)
+        )
+        
+        # Check page inserts
+        mock_cursor.execute.assert_any_call(
+            'INSERT OR REPLACE INTO pages (document_id, page_number, text_content) VALUES (?, ?, ?)',
+            (1, 1, 'Sample text content')
+        )
+        mock_cursor.execute.assert_any_call(
+            'INSERT OR REPLACE INTO pages (document_id, page_number, text_content) VALUES (?, ?, ?)',
+            (1, 2, 'Sample text content')
+        )
+        
+        # Check image inserts
+        mock_cursor.execute.assert_any_call(
+            'INSERT OR REPLACE INTO extracted_images (page_id, xref, extension, image_data) VALUES (?, ?, ?, ?)',
+            (1, 1, 'png', b'fake_image_data')
+        )
+        mock_cursor.execute.assert_any_call(
+            'INSERT OR REPLACE INTO extracted_images (page_id, xref, extension, image_data) VALUES (?, ?, ?, ?)',
+            (2, 2, 'png', b'fake_image_data')
+        )
+        
+        # Verify commit was called
+        mock_conn.commit.assert_called_once()
+        
+        # Verify connection was closed
+        mock_conn.close.assert_called_once()

@@ -50,6 +50,60 @@ class PdfParser:
                 with open(image_path, "wb") as f:
                     f.write(image.image)
 
+    def persist_to_db(self):
+        import sqlite3
+        from datetime import datetime
+        
+        # Connect to the database
+        conn = sqlite3.connect('db/database.db')
+        cursor = conn.cursor()
+        
+        try:
+            # Insert document record
+            file_name = os.path.basename(self.pdf_path)
+            file_size = os.path.getsize(self.pdf_path) if os.path.exists(self.pdf_path) else None
+            
+            cursor.execute('INSERT OR IGNORE INTO documents (file_path, file_name, file_size) VALUES (?, ?, ?)',
+                           (self.pdf_path, file_name, file_size))
+            
+            # Get the document ID
+            cursor.execute('SELECT id FROM documents WHERE file_path = ?', (self.pdf_path,))
+            document_id = cursor.fetchone()[0]
+            
+            # Process each page
+            for page_num in range(len(self.doc)):
+                # Get text content
+                text = self.get_text(page_num)
+                
+                # Insert page record
+                cursor.execute('INSERT OR REPLACE INTO pages (document_id, page_number, text_content) VALUES (?, ?, ?)',
+                               (document_id, page_num + 1, text))
+                
+                # Get the page ID
+                cursor.execute('SELECT id FROM pages WHERE document_id = ? AND page_number = ?',
+                               (document_id, page_num + 1))
+                page_id = cursor.fetchone()[0]
+                
+                # Get images
+                images = self.get_images(page_num)
+                
+                # Insert image records
+                for image in images:
+                    cursor.execute('INSERT OR REPLACE INTO extracted_images (page_id, xref, extension, image_data) VALUES (?, ?, ?, ?)',
+                                   (page_id, image.xref, image.extension, image.image))
+            
+            # Commit changes
+            conn.commit()
+            
+        except Exception as e:
+            # Rollback in case of error
+            conn.rollback()
+            raise e
+            
+        finally:
+            # Close connection
+            conn.close()
+
 
 class PdfImageInserter:
     def __init__(self, key_string: str, small_image_path: str, padding: float = 5, processed_suffix: str = "_processed"):
