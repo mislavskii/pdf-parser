@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ParsePDF"
+version = "0.1.0"
+description = "A tool to parse and translate PDF files"
+authors = [
+    {name = "Warakot", email = "mislavsky@yandex.ru"},
+]
+dependencies = [
+    "pdf2image>=1.17.0",
+    "PyMuPDF>=1.26.3",
+    "pytesseract>=0.3.13",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.2",
+    "ipython>=9.4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["src*"]
