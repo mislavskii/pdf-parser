@@ -28,6 +28,15 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v"
 
+[pytest]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    # note the use of single quote below to denote "raw" strings in TOML
+    'ignore:function ham\(\) is deprecated:DeprecationWarning',
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["src*"]
