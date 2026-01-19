@@ -37,6 +37,13 @@ class PdfParser:
             images.append(ExtractedImage(image_bytes, page_num, xref, image_ext))
         return images
     
+    def page_to_image(self, page_num):
+        page = self.doc.load_page(page_num)
+        pix = page.get_pixmap()
+        img_data = pix.tobytes("png")
+        pix = None  # Free memory
+        return img_data
+    
     def save_to_files(self):
         output_dir = self.pdf_path.replace('.pdf', '')
         os.makedirs(output_dir, exist_ok=True)
@@ -76,10 +83,7 @@ class PdfParser:
                 text = self.get_text(page_num)
                 
                 # Convert page to image
-                page = self.doc.load_page(page_num)
-                pix = page.get_pixmap()
-                img_data = pix.tobytes("png")
-                pix = None  # Free memory
+                img_data = self.page_to_image(page_num)
                 
                 # Insert page record
                 cursor.execute('INSERT OR REPLACE INTO pages (document_id, page_number, text_content, as_image) VALUES (?, ?, ?, ?)',
