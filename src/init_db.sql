@@ -13,9 +13,8 @@ CREATE TABLE IF NOT EXISTS pages (
     document_id INTEGER NOT NULL,
     page_number INTEGER NOT NULL,
     text_content TEXT,
-    ocr_result, TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ocr_result TEXT,
+    as_image BLOB,
     FOREIGN KEY (document_id) REFERENCES documents (id) ON DELETE CASCADE,
     UNIQUE(document_id, page_number)
 );
@@ -61,11 +60,3 @@ CREATE INDEX IF NOT EXISTS idx_pages_document_id ON pages(document_id);
 CREATE INDEX IF NOT EXISTS idx_images_page_id ON extracted_images(page_id);
 CREATE INDEX IF NOT EXISTS idx_processed_pdfs_document_id ON processed_pdfs(original_document_id);
 CREATE INDEX IF NOT EXISTS idx_translations_page_id ON text_translations(page_id);
-
--- Trigger to update the updated_at timestamp
-CREATE TRIGGER IF NOT EXISTS update_pages_updated_at
-    AFTER UPDATE ON pages
-    FOR EACH ROW
-    BEGIN
-        UPDATE pages SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-    END;

@@ -75,9 +75,15 @@ class PdfParser:
                 # Get text content
                 text = self.get_text(page_num)
                 
+                # Convert page to image
+                page = self.doc.load_page(page_num)
+                pix = page.get_pixmap()
+                img_data = pix.tobytes("png")
+                pix = None  # Free memory
+                
                 # Insert page record
-                cursor.execute('INSERT OR REPLACE INTO pages (document_id, page_number, text_content) VALUES (?, ?, ?)',
-                               (document_id, page_num + 1, text))
+                cursor.execute('INSERT OR REPLACE INTO pages (document_id, page_number, text_content, as_image) VALUES (?, ?, ?, ?)',
+                               (document_id, page_num + 1, text, img_data))
                 
                 # Get the page ID
                 cursor.execute('SELECT id FROM pages WHERE document_id = ? AND page_number = ?',

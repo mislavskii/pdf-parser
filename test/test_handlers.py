@@ -131,6 +131,11 @@ class TestPdfParser:
         # Setup mocks
         mock_pmp_open.return_value = mock_doc
         mock_doc.load_page.return_value = mock_page
+        
+        # Mock page conversion to image
+        mock_pixmap = Mock()
+        mock_pixmap.tobytes.return_value = b"fake_page_image_data"
+        mock_page.get_pixmap.return_value = mock_pixmap
         mock_doc.__len__ = Mock(return_value=2)  # 2 pages for this test
         mock_doc.extract_image.return_value = mock_base_image
         
@@ -167,12 +172,12 @@ class TestPdfParser:
         
         # Check page inserts
         mock_cursor.execute.assert_any_call(
-            'INSERT OR REPLACE INTO pages (document_id, page_number, text_content) VALUES (?, ?, ?)',
-            (1, 1, 'Sample text content')
+            'INSERT OR REPLACE INTO pages (document_id, page_number, text_content, as_image) VALUES (?, ?, ?, ?)',
+            (1, 1, 'Sample text content', b'fake_page_image_data')
         )
         mock_cursor.execute.assert_any_call(
-            'INSERT OR REPLACE INTO pages (document_id, page_number, text_content) VALUES (?, ?, ?)',
-            (1, 2, 'Sample text content')
+            'INSERT OR REPLACE INTO pages (document_id, page_number, text_content, as_image) VALUES (?, ?, ?, ?)',
+            (1, 2, 'Sample text content', b'fake_page_image_data')
         )
         
         # Check image inserts
