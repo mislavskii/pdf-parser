@@ -3,7 +3,7 @@ import sqlite3
 from unittest.mock import Mock, patch, mock_open
 import tempfile
 import os
-from src.page_processor import get_page
+from src.page_processor import get_page, get_page_count
 from src.entities import ParsedPage, ExtractedImage
 
 
@@ -114,3 +114,76 @@ class TestGetPage:
         assert isinstance(result, ParsedPage)
         assert result.text_content == ""
         assert result.ocr_result == ""
+
+        
+class TestGetPageCount:
+    """Test suite for the get_page_count function."""
+
+    @pytest.fixture
+    def mock_db_connection(self):
+        """Create a mock database connection."""
+        conn = Mock(spec=sqlite3.Connection)
+        cursor = Mock(spec=sqlite3.Cursor)
+        conn.cursor.return_value = cursor
+        return conn, cursor
+
+    def test_get_page_count_success(self, mock_db_connection):
+        """Test successful retrieval of page count from the database."""
+        conn, cursor = mock_db_connection
+        
+        # Mock database responses
+        cursor.fetchone.side_effect = [
+            [1],  # document_id
+            [5]   # page count
+        ]
+        
+        with patch('sqlite3.connect', return_value=conn):
+            result = get_page_count("test.pdf")
+        
+        # Verify the result
+        assert result == 5
+        
+        # Verify database calls
+        assert cursor.execute.call_count == 2
+        cursor.execute.assert_any_call('SELECT id FROM documents WHERE file_path = ?', ("test.pdf",))
+        cursor.execute.assert_any_call('SELECT COUNT(*) FROM pages WHERE document_id = ?', (1,))
+
+    def test_get_page_count_document_not_found(self, mock_db_connection):
+        """Test get_page_count when document is not found in database."""
+        conn, cursor = mock_db_connection
+        cursor.fetchone.return_value = None  # No document found
+        
+        with patch('sqlite3.connect', return_value=conn):
+            with pytest.raises(ValueError, match="Document with path 'test.pdf' not found in database"):
+                get_page_count("test.pdf")
+
+    def test_get_page_count_db_connection_closed(self, mock_db_connection):
+        """Test that database connection is properly closed."""
+        conn, cursor = mock_db_connection
+        
+        # Mock database responses
+        cursor.fetchone.side_effect = [
+            [1],  # document_id
+            [3]   # page count
+        ]
+        
+        with patch('sqlite3.connect', return_value=conn):
+            result = get_page_count("test.pdf")
+        
+        # Verify the result
+        assert result == 3
+        
+        # Verify connection was closed
+        conn.close.assert_called_once()
+
+    def test_get_page_count_db_connection_closed_on_error(self, mock_db_connection):
+        """Test that database connection is closed even when an error occurs."""
+        conn, cursor = mock_db_connection
+        cursor.fetchone.return_value = None  # No document found
+        
+        with patch('sqlite3.connect', return_value=conn):
+            with pytest.raises(ValueError):
+                get_page_count("test.pdf")
+        
+        # Verify connection was closed even though an exception was raised
+        conn.close.assert_called_once()
