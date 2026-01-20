@@ -64,3 +64,35 @@ def get_page(pdf_path: str, page_num: int) -> ParsedPage:
         
     finally:
         conn.close()
+
+
+def get_page_count(pdf_path: str) -> int:
+    """
+    Retrieve the number of pages in a PDF document.
+    
+    Args:
+        pdf_path (str): Path to the PDF file
+        
+    Returns:
+        int: Number of pages in the document
+    """
+    # Connect to the database
+    conn = sqlite3.connect('db/database.db')
+    cursor = conn.cursor()
+    
+    try:
+        # Get document ID
+        cursor.execute('SELECT id FROM documents WHERE file_path = ?', (pdf_path,))
+        document_row = cursor.fetchone()
+        if not document_row:
+            raise ValueError(f"Document with path '{pdf_path}' not found in database")
+        document_id = document_row[0]
+        
+        # Get page count
+        cursor.execute('SELECT COUNT(*) FROM pages WHERE document_id = ?', (document_id,))
+        page_count = cursor.fetchone()[0]
+        
+        return page_count
+        
+    finally:
+        conn.close()
