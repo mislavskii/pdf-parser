@@ -6,3 +6,8 @@ class ExtractedImage:
     page: int
     xref: int
     extension: str
+
+
+@dataclass
+class Page:
+    pass

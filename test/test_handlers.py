@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch, mock_open
 import pymupdf as pmp
 from src.handlers import PdfParser
-from src.utils import ExtractedImage
+from src.entities import ExtractedImage
 import os
 
 

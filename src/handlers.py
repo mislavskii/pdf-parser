@@ -11,7 +11,7 @@ from datetime import datetime
 
 import pytesseract
 
-from .utils import ExtractedImage
+from .entities import ExtractedImage
 
 
 class PdfParser:
