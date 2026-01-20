@@ -1,5 +1,6 @@
 import sqlite3
 from .entities import ParsedPage, ExtractedImage
+from .database import DATABASE_URL
 
 
 def get_page(pdf_path: str, page_num: int) -> ParsedPage:
@@ -14,7 +15,7 @@ def get_page(pdf_path: str, page_num: int) -> ParsedPage:
         ParsedPage: Page data with text content, OCR result, image, and extracted images
     """
     # Connect to the database
-    conn = sqlite3.connect('db/database.db')
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     
     try:
@@ -77,7 +78,7 @@ def get_page_count(pdf_path: str) -> int:
         int: Number of pages in the document
     """
     # Connect to the database
-    conn = sqlite3.connect('db/database.db')
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     
     try:

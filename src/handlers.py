@@ -12,6 +12,7 @@ from datetime import datetime
 import pytesseract
 
 from .entities import ExtractedImage
+from .database import DATABASE_URL
 
 
 class PdfParser:
@@ -63,7 +64,7 @@ class PdfParser:
     def persist_to_db(self):
         
         # Connect to the database
-        conn = sqlite3.connect('db/database.db')
+        conn = sqlite3.connect(DATABASE_URL)
         cursor = conn.cursor()
         
         try:
