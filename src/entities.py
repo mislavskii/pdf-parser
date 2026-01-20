@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class ExtractedImage:
     image: bytes
@@ -9,5 +10,11 @@ class ExtractedImage:
 
 
 @dataclass
-class Page:
-    pass
+class ParsedPage:
+    id: int
+    document_id: int
+    page_number: int
+    text_content: str
+    ocr_result: str
+    as_image: bytes
+    extracted_images: list[ExtractedImage]
