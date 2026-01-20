@@ -12,7 +12,7 @@ class ExtractedImage:
 @dataclass
 class ParsedPage:
     id: int
-    document_id: int
+    document_path: str
     page_number: int
     text_content: str
     ocr_result: str
