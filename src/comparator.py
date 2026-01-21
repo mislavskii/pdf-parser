@@ -4,7 +4,6 @@ from PIL import Image
 import pytesseract
 from skimage.metrics import structural_similarity as ssim
 import hashlib
-from typing import Tuple
 
 
 def preprocess_image_for_comparison(pil_image: Image.Image) -> np.ndarray:
@@ -17,44 +16,7 @@ def preprocess_image_for_comparison(pil_image: Image.Image) -> np.ndarray:
     Returns:
         np.ndarray: Preprocessed image as numpy array
     """
-    # Convert PIL image to numpy array
-    img_array = np.array(pil_image)
-    
-    # Ensure image is grayscale
-    if len(img_array.shape) == 3:
-        img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-    
-    # Apply Gaussian blur to reduce noise
-    img_array = cv2.GaussianBlur(img_array, (5, 5), 0)
-    
-    # Apply adaptive threshold to enhance contrast
-    img_array = cv2.adaptiveThreshold(
-        img_array, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
-    )
-    
-    return img_array
-
-
-def preprocess_for_ssim(pil_image: Image.Image) -> np.ndarray:
-    """
-    Preprocess a PIL image specifically for SSIM comparison.
-    
-    Args:
-        pil_image: PIL Image object (grayscale photocopy)
-        
-    Returns:
-        np.ndarray: Preprocessed image as numpy array
-    """
-    # Convert PIL image to numpy array
-    img_array = np.array(pil_image)
-    
-    # Ensure image is grayscale
-    if len(img_array.shape) == 3:
-        img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-    
-    # Apply Gaussian blur to reduce noise
-    img_array = cv2.GaussianBlur(img_array, (3, 3), 0)
-    
+    img_array = np.array(pil_image.convert(mode='L') if pil_image.mode != 'L' else pil_image)
     return img_array
 
 
@@ -270,16 +232,12 @@ def compare_images(subject: Image.Image, object: Image.Image) -> float:
         processed_img1 = preprocess_image_for_comparison(subject)
         processed_img2 = preprocess_image_for_comparison(object)
         
-        # For SSIM and pixel comparison, use less aggressive preprocessing
-        ssim_img1 = preprocess_for_ssim(subject)
-        ssim_img2 = preprocess_for_ssim(object)
-        
         # Calculate multiple similarity metrics
-        ssim_score = calculate_ssim_similarity(ssim_img1, ssim_img2)
+        ssim_score = calculate_ssim_similarity(processed_img1, processed_img2)
         hist_score = calculate_histogram_similarity(processed_img1, processed_img2)
         orb_score = calculate_orb_similarity(processed_img1, processed_img2)
         text_score = calculate_text_similarity(processed_img1, processed_img2)
-        pixel_score = calculate_pixel_similarity(ssim_img1, ssim_img2)
+        pixel_score = calculate_pixel_similarity(processed_img1, processed_img2)
         
         # Weighted combination of all metrics
         # SSIM and histogram are most important for photocopies
