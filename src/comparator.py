@@ -173,8 +173,9 @@ def calculate_text_similarity(img1: np.ndarray, img2: np.ndarray) -> float:
     """
     try:
         # Perform OCR on both images
-        text1 = pytesseract.image_to_string(img1, config='--psm 6')
-        text2 = pytesseract.image_to_string(img2, config='--psm 6')
+        # Using PSM 1 (Automatic page segmentation with OSD) for full-page document analysis
+        text1 = pytesseract.image_to_string(img1, config='--psm 1')
+        text2 = pytesseract.image_to_string(img2, config='--psm 1')
         
         # Handle empty text cases
         if not text1 and not text2:
