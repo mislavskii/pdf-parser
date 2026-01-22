@@ -20,41 +20,34 @@ class PageComparator:
 
         self.subj_array, self.obj_array = map(lambda x: np.array(x), [subject, object])
 
-# all below will be refactored as class methods!
-def calculate_ssim_similarity(img1: np.ndarray, img2: np.ndarray) -> float:
-    """
-    Calculate Structural Similarity Index between two images.
-    
-    Args:
-        img1: First preprocessed image
-        img2: Second preprocessed image
+    def calculate_ssim_similarity(self) -> float:
+        """
+        Calculate Structural Similarity Index between two images.
         
-    Returns:
-        float: SSIM similarity score (0-1)
-    """
-    # Resize images to the same dimensions if needed
-    if img1.shape != img2.shape:
-        min_height = min(img1.shape[0], img2.shape[0])
-        min_width = min(img1.shape[1], img2.shape[1])
-        img1 = cv2.resize(img1, (min_width, min_height))
-        img2 = cv2.resize(img2, (min_width, min_height))
-    
-    # Calculate SSIM
-    try:
-        similarity_score = ssim(img1, img2, channel_axis=None if img1.ndim == 2 else -1)
-        # Handle different return value types
-        if isinstance(similarity_score, (tuple, list)):
-            if len(similarity_score) > 0:
-                similarity_score = similarity_score[0]
-            else:
-                similarity_score = 0.0
-        # Convert to float
-        similarity_score = float(similarity_score)
-        return max(0.0, similarity_score)  # Ensure non-negative
-    except Exception:
-        # If SSIM fails, return 0
-        return 0.0
+        Args:
+            img1: First preprocessed image
+            img2: Second preprocessed image
+            
+        Returns:
+            float: SSIM similarity score (0-1)
+        """   
+        try:
+            similarity_score = ssim(self.subj_array, self.obj_array)
+            # Handle different return value types
+            if isinstance(similarity_score, (tuple, list)):
+                if len(similarity_score) > 0:
+                    similarity_score = similarity_score[0]
+                else:
+                    similarity_score = 0.0
+            # Convert to float
+            similarity_score = float(similarity_score)
+            return max(0.0, similarity_score)  # Ensure non-negative
+        except Exception:
+            # If SSIM fails, return 0
+            return 0.0
 
+
+# all below will be refactored as class methods!
 
 def calculate_histogram_similarity(img1: np.ndarray, img2: np.ndarray) -> float:
     """
