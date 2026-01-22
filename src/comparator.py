@@ -23,11 +23,6 @@ class PageComparator:
     def calculate_ssim_similarity(self) -> float:
         """
         Calculate Structural Similarity Index between two images.
-        
-        Args:
-            img1: First preprocessed image
-            img2: Second preprocessed image
-            
         Returns:
             float: SSIM similarity score (0-1)
         """   
