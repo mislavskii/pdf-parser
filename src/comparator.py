@@ -10,6 +10,7 @@ class PageComparator:
     def __init__(self, subject: Image.Image, object: Image.Image):
         self.subject = subject.convert('L') if subject.mode != 'L' else subject
         self.object = object.convert('L') if object.mode != 'L' else object
+        self.subj_array, self.obj_array = np.ndarray([]), np.ndarray([])
         self.preprocess_images_for_comparison()
 
     def preprocess_images_for_comparison(self):
