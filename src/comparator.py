@@ -13,12 +13,10 @@ class PageComparator:
         self.preprocess_images_for_comparison()
 
     def preprocess_images_for_comparison(self):
-        """Preprocess the PIL images for comparison operations."""
-        if self.subject.size != self.subject.size:
-            mean_dimensions = tuple(np.mean(subj_side, obj_side) for subj_side, obj_side in zip(self.subject.size, self.object.size))
-            subject, object = map(lambda x: x.resize(mean_dimensions), (self.subject, self.object))
-        else:
-            subject, object = self.subject, self.object
+        subject, object = self.subject, self.object
+        if subject.size != object.size:
+            mean_dimensions = tuple(np.mean(subj_side, obj_side) for subj_side, obj_side in zip(subject.size, object.size))
+            subject, object = map(lambda x: x.resize(mean_dimensions), (self.subject, self.object))            
 
         self.subj_array, self.obj_array = map(lambda x: np.array(x), [subject, object])
 
