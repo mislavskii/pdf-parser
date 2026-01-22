@@ -6,20 +6,23 @@ from skimage.metrics import structural_similarity as ssim
 import hashlib
 
 
-def preprocess_image_for_comparison(pil_image: Image.Image) -> np.ndarray:
-    """
-    Preprocess a PIL image for comparison operations.
-    
-    Args:
-        pil_image: PIL Image object (grayscale photocopy)
-        
-    Returns:
-        np.ndarray: Preprocessed image as numpy array
-    """
-    img_array = np.array(pil_image.convert(mode='L') if pil_image.mode != 'L' else pil_image)
-    return img_array
+class PageComparator:
+    def __init__(self, subject: Image.Image, object: Image.Image):
+        self.subject = subject.convert('L') if subject.mode != 'L' else subject
+        self.object = object.convert('L') if object.mode != 'L' else object
+        self.preprocess_images_for_comparison()
 
+    def preprocess_images_for_comparison(self):
+        """Preprocess the PIL images for comparison operations."""
+        if self.subject.size != self.subject.size:
+            mean_dimensions = tuple(np.mean(subj_side, obj_side) for subj_side, obj_side in zip(self.subject.size, self.object.size))
+            subject, object = map(lambda x: x.resize(mean_dimensions), (self.subject, self.object))
+        else:
+            subject, object = self.subject, self.object
 
+        self.subj_array, self.obj_array = map(lambda x: np.array(x), [subject, object])
+
+# all below will be refactored as class methods!
 def calculate_ssim_similarity(img1: np.ndarray, img2: np.ndarray) -> float:
     """
     Calculate Structural Similarity Index between two images.
