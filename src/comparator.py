@@ -27,7 +27,7 @@ class PageComparator:
             float: SSIM similarity score (0-1)
         """   
         try:
-            similarity_score = ssim(self.subj_array, self.obj_array)
+            similarity_score = ssim(self.subj_array, self.obj_array, data_range=255)
             # Handle different return value types
             if isinstance(similarity_score, (tuple, list)):
                 if len(similarity_score) > 0:
@@ -42,7 +42,7 @@ class PageComparator:
             return 0.0
 
 
-# all below will be refactored as class methods!
+# TODO: convert standalone functions below into class methods
 
 def calculate_histogram_similarity(img1: np.ndarray, img2: np.ndarray) -> float:
     """
