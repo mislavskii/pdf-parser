@@ -99,3 +99,44 @@ class TestPageComparator:
         # Should return a valid similarity score
         assert 0.0 <= similarity <= 1.0
 
+    def test_calculate_histogram_similarity_identical_images(self):
+        """Test histogram similarity calculation for identical images."""
+        img = self.create_test_image()
+        comparator = PageComparator(img, img)
+        similarity = comparator.calculate_histogram_similarity()
+        # Identical images should have perfect histogram similarity
+        assert similarity == 1.0
+
+    def test_calculate_histogram_similarity_similar_images(self):
+        """Test histogram similarity calculation for similar images."""
+        # Create images with similar but not identical color distributions
+        img_array1 = np.random.randint(120, 130, (100, 100), dtype=np.uint8)
+        img_array2 = np.random.randint(122, 128, (100, 100), dtype=np.uint8)
+        img1 = Image.fromarray(img_array1, mode='L')
+        img2 = Image.fromarray(img_array2, mode='L')
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_histogram_similarity()
+        # Similar images should have reasonable histogram similarity
+        assert similarity >= 0.50
+
+    def test_calculate_histogram_similarity_different_images(self):
+        """Test histogram similarity calculation for different images."""
+        # Create images with very different color distributions
+        img_array1 = np.random.randint(0, 10, (100, 100), dtype=np.uint8)
+        img_array2 = np.random.randint(245, 255, (100, 100), dtype=np.uint8)
+        img1 = Image.fromarray(img_array1, mode='L')
+        img2 = Image.fromarray(img_array2, mode='L')
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_histogram_similarity()
+        # Very different images should have lower histogram similarity
+        assert similarity <= 0.70
+
+    def test_calculate_histogram_similarity_edge_cases(self):
+        """Test histogram similarity calculation with edge cases."""
+        # Create 1x1 images
+        img1 = self.create_test_image(1, 1, 0)
+        img2 = self.create_test_image(1, 1, 255)
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_histogram_similarity()
+        # Should return a valid similarity score
+        assert 0.0 <= similarity <= 1.0

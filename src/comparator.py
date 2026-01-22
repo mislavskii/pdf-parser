@@ -43,8 +43,6 @@ class PageComparator:
             return 0.0
 
 
-# TODO: convert standalone functions below into class methods
-
     def calculate_histogram_similarity(self) -> float:
         """
         Calculate histogram correlation similarity between two images.
