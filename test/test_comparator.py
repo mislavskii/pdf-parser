@@ -15,6 +15,16 @@ class TestPageComparator:
         img = Image.fromarray(img_array, mode='L')
         return img
 
+    def create_test_image_with_features(self, width=200, height=200):
+        """Create a test image with detectable features."""
+        # Create a grayscale image with some features
+        img_array = np.random.randint(0, 255, (height, width), dtype=np.uint8)
+        # Add a simple pattern - a square in the middle
+        center_y, center_x = height // 2, width // 2
+        img_array[center_y-20:center_y+20, center_x-20:center_x+20] = 255
+        img = Image.fromarray(img_array, mode='L')
+        return img
+
     def test_preprocess_same_size_images(self):
         """Test preprocessing with same size images."""
         img1 = self.create_test_image(100, 100)
@@ -140,3 +150,53 @@ class TestPageComparator:
         similarity = comparator.calculate_histogram_similarity()
         # Should return a valid similarity score
         assert 0.0 <= similarity <= 1.0
+        
+    def test_calculate_orb_similarity_identical_images(self):
+        """Test ORB similarity calculation for identical images."""
+        img = self.create_test_image_with_features()
+        comparator = PageComparator(img, img)
+        similarity = comparator.calculate_orb_similarity()
+        # Identical images with features should have high ORB similarity
+        assert similarity >= 0.8, f"Expected high similarity for identical images with features, got {similarity}"
+
+    def test_calculate_orb_similarity_similar_images(self):
+        """Test ORB similarity calculation for similar images."""
+        # Create two similar images with features
+        img1 = self.create_test_image_with_features()
+        img2 = self.create_test_image_with_features()
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_orb_similarity()
+        # Similar images should have reasonable ORB similarity
+        assert 0.0 <= similarity <= 1.0, f"Similarity should be between 0 and 1, got {similarity}"
+
+    def test_calculate_orb_similarity_different_images(self):
+        """Test ORB similarity calculation for different images."""
+        # Create images with very different content
+        img1 = self.create_test_image_with_features()
+        # Create a completely different image (random noise)
+        img_array = np.random.randint(0, 255, (200, 200), dtype=np.uint8)
+        img2 = Image.fromarray(img_array, mode='L')
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_orb_similarity()
+        # Different images should have lower ORB similarity
+        assert 0.0 <= similarity <= 0.9, f"Similarity should be between 0 and 0.9 for different images, got {similarity}"
+
+    def test_calculate_orb_similarity_edge_cases(self):
+        """Test ORB similarity calculation with edge cases."""
+        # Create 1x1 images
+        img1 = self.create_test_image(1, 1, 0)
+        img2 = self.create_test_image(1, 1, 255)
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_orb_similarity()
+        # Should return a valid similarity score
+        assert 0.0 <= similarity <= 1.0, f"Similarity should be between 0 and 1, got {similarity}"
+
+    def test_calculate_orb_similarity_no_features(self):
+        """Test ORB similarity when no features are detected."""
+        # Create uniform images that likely won't have detectable features
+        img_array = np.full((50, 50), 128, dtype=np.uint8)
+        img = Image.fromarray(img_array, mode='L')
+        comparator = PageComparator(img, img)
+        similarity = comparator.calculate_orb_similarity()
+        # Should return 0.0 when no features are detected
+        assert similarity == 0.0, f"Expected 0.0 for images with no features, got {similarity}"

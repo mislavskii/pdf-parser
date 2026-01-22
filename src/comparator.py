@@ -71,34 +71,38 @@ class PageComparator:
         Returns:
             float: ORB similarity score (0-1)
         """
-        # Initialize AKAZE detector
-        akaze = cv2.AKAZE_create()
-        
-        # Find keypoints and descriptors
-        kp1, des1 = akaze.detectAndCompute(self.subj_array, None)
-        kp2, des2 = akaze.detectAndCompute(self.obj_array, None)
-        
-        # Handle case where no keypoints are found
-        if des1 is None or des2 is None:
+        try:
+            # Initialize AKAZE detector
+            akaze = cv2.AKAZE_create()
+            
+            # Find keypoints and descriptors
+            kp1, des1 = akaze.detectAndCompute(self.subj_array, None)
+            kp2, des2 = akaze.detectAndCompute(self.obj_array, None)
+            
+            # Handle case where no keypoints are found
+            if des1 is None or des2 is None:
+                return 0.0
+            
+            # Create BFMatcher object
+            bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+            
+            # Match descriptors
+            matches = bf.match(des1, des2)
+            
+            # Calculate similarity based on matches
+            if len(matches) == 0:
+                return 0.0
+            
+            # Calculate similarity as ratio of good matches to total possible matches
+            max_possible_matches = min(len(kp1), len(kp2))
+            if max_possible_matches == 0:
+                return 0.0
+            
+            similarity = len(matches) / max_possible_matches
+            return float(min(1.0, similarity))
+        except cv2.error:
+            # Handle OpenCV errors (e.g., when images are too small)
             return 0.0
-        
-        # Create BFMatcher object
-        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        
-        # Match descriptors
-        matches = bf.match(des1, des2)
-        
-        # Calculate similarity based on matches
-        if len(matches) == 0:
-            return 0.0
-        
-        # Calculate similarity as ratio of good matches to total possible matches
-        max_possible_matches = min(len(kp1), len(kp2))
-        if max_possible_matches == 0:
-            return 0.0
-        
-        similarity = len(matches) / max_possible_matches
-        return float(min(1.0, similarity))
 
     def calculate_text_similarity(self) -> float:
         """
