@@ -28,7 +28,7 @@ class PageComparator:
             float: SSIM similarity score (0-1)
         """   
         try:
-            similarity_score = ssim(self.subj_array, self.obj_array, data_range=255)
+            similarity_score = ssim(self.subj_array, self.obj_array, data_range=255, win_size=7)
             # Handle different return value types
             if isinstance(similarity_score, (tuple, list)):
                 if len(similarity_score) > 0:
