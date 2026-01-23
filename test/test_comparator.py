@@ -200,3 +200,55 @@ class TestPageComparator:
         similarity = comparator.calculate_orb_similarity()
         # Should return 0.0 when no features are detected
         assert similarity == 0.0, f"Expected 0.0 for images with no features, got {similarity}"
+
+
+    def test_calculate_pixel_similarity_identical_images(self):
+        """Test pixel similarity calculation for identical images."""
+        img = self.create_test_image()
+        comparator = PageComparator(img, img)
+        similarity = comparator.calculate_pixel_similarity()
+        # Identical images should have perfect pixel similarity
+        assert similarity == 1.0
+
+    def test_calculate_pixel_similarity_similar_images(self):
+        """Test pixel similarity calculation for similar images."""
+        # Create images with similar but not identical pixel values
+        img_array1 = np.full((100, 100), 120, dtype=np.uint8)
+        img_array2 = np.full((100, 100), 125, dtype=np.uint8)
+        img1 = Image.fromarray(img_array1, mode='L')
+        img2 = Image.fromarray(img_array2, mode='L')
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_pixel_similarity()
+        # Similar images should have high pixel similarity
+        assert similarity >= 0.95
+
+    def test_calculate_pixel_similarity_different_images(self):
+        """Test pixel similarity calculation for different images."""
+        # Create images with very different pixel values
+        img_array1 = np.full((100, 100), 0, dtype=np.uint8)    # Black image
+        img_array2 = np.full((100, 100), 255, dtype=np.uint8)  # White image
+        img1 = Image.fromarray(img_array1, mode='L')
+        img2 = Image.fromarray(img_array2, mode='L')
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_pixel_similarity()
+        # Very different images should have low pixel similarity
+        assert similarity <= 0.50
+
+    def test_calculate_pixel_similarity_edge_cases(self):
+        """Test pixel similarity calculation with edge cases."""
+        # Create 1x1 images
+        img1 = self.create_test_image(1, 1, 0)
+        img2 = self.create_test_image(1, 1, 255)
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_pixel_similarity()
+        # Should return a valid similarity score
+        assert 0.0 <= similarity <= 1.0
+
+    def test_calculate_pixel_similarity_different_sizes(self):
+        """Test pixel similarity calculation with different sized images."""
+        img1 = self.create_test_image(100, 150)
+        img2 = self.create_test_image(200, 250)
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_pixel_similarity()
+        # Should handle different sizes by resizing
+        assert 0.0 <= similarity <= 1.0
