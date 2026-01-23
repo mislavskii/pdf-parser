@@ -114,8 +114,8 @@ class PageComparator:
         try:
             # Perform OCR on both images
             # Using PSM 1 (Automatic page segmentation with OSD) for full-page document analysis
-            text1 = pytesseract.image_to_string(self.subj_array, config='--psm 1')
-            text2 = pytesseract.image_to_string(self.obj_array, config='--psm 1')
+            text1 = pytesseract.image_to_string(self.subject, config='--psm 1')
+            text2 = pytesseract.image_to_string(self.object, config='--psm 1')
             
             # Handle empty text cases
             if not text1 and not text2:
@@ -133,31 +133,22 @@ class PageComparator:
             if not text1 or not text2:
                 return 0.0
             
-            # Calculate similarity using simple hashing approach
-            hash1 = hashlib.md5(text1.encode()).hexdigest()
-            hash2 = hashlib.md5(text2.encode()).hexdigest()
-            
-            # If hashes match, texts are identical
-            if hash1 == hash2:
+            # Check if the two texts are identical
+            if text1 == text2:
                 return 1.0
             
-            # Calculate character-level similarity
-            # Using a simple approach: common characters / total unique characters
-            set1 = set(text1)
-            set2 = set(text2)
-            
-            if not set1 and not set2:
-                return 1.0
-            if not set1 or not set2:
-                return 0.0
+            # Calculate "word"-level similarity
+            # Using a simple approach: common "words" / total unique "words"
+            set1 = set(text1.split())
+            set2 = set(text2.split())
                 
-            common_chars = len(set1.intersection(set2))
-            total_chars = len(set1.union(set2))
+            common_words = len(set1.intersection(set2))
+            total_words = len(set1.union(set2))
             
-            if total_chars == 0:
+            if total_words == 0:
                 return 1.0
                 
-            return common_chars / total_chars
+            return common_words / total_words
             
         except Exception:
             # If OCR fails, return 0
