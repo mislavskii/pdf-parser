@@ -1,5 +1,5 @@
 import pytest
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import io
 from src.comparator import compare_images, PageComparator
@@ -23,6 +23,35 @@ class TestPageComparator:
         center_y, center_x = height // 2, width // 2
         img_array[center_y-20:center_y+20, center_x-20:center_x+20] = 255
         img = Image.fromarray(img_array, mode='L')
+        return img
+
+    def create_test_image_with_text(self, text_lines=["Test Line 1", "Test Line 2", "Test Line 3"], width=300, height=200):
+        """Create a test image with multiple lines of text content."""
+        # Create a grayscale image
+        img = Image.new('L', (width, height), color=255)  # White background
+        draw = ImageDraw.Draw(img)
+        
+        # Use the default font
+        font = ImageFont.load_default()
+        
+        # Calculate total text height
+        line_height = 20  # Approximate line height
+        total_text_height = len(text_lines) * line_height
+        
+        # Starting y position (centered vertically)
+        start_y = (height - total_text_height) // 2
+        
+        # Draw each line of text
+        for i, line in enumerate(text_lines):
+            # Calculate text position (centered horizontally)
+            text_bbox = draw.textbbox((0, 0), line, font=font)
+            text_width = text_bbox[2] - text_bbox[0]
+            x = (width - text_width) // 2
+            y = start_y + i * line_height
+            
+            # Draw text
+            draw.text((x, y), line, fill=0, font=font)  # Black text
+        
         return img
 
     def test_preprocess_same_size_images(self):
@@ -252,3 +281,81 @@ class TestPageComparator:
         similarity = comparator.calculate_pixel_similarity()
         # Should handle different sizes by resizing
         assert 0.0 <= similarity <= 1.0
+
+    def test_calculate_text_similarity_identical_text(self):
+        """Test text similarity calculation for images with identical text."""
+        # Create two images with identical text
+        text_lines = ["Hello World", "This is a test", "Page comparison"]
+        img1 = self.create_test_image_with_text(text_lines)
+        img2 = self.create_test_image_with_text(text_lines)
+        
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_text_similarity()
+        
+        # Identical text should result in perfect similarity
+        assert similarity == 1.0, f"Expected 1.0 for identical text, got {similarity}"
+
+    def test_calculate_text_similarity_similar_text(self):
+        """Test text similarity calculation for images with similar text."""
+        # Create two images with similar but not identical text
+        text_lines1 = ["Hello World", "This is a test", "Page comparison"]
+        text_lines2 = ["Hello World", "This is a test", "Document comparison"]
+        img1 = self.create_test_image_with_text(text_lines1)
+        img2 = self.create_test_image_with_text(text_lines2)
+        
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_text_similarity()
+        
+        # Similar text should result in high similarity (at least 0.5)
+        assert similarity >= 0.5, f"Expected >= 0.5 for similar text, got {similarity}"
+        assert 0.0 <= similarity <= 1.0, f"Similarity should be between 0 and 1, got {similarity}"
+
+    def test_calculate_text_similarity_different_text(self):
+        """Test text similarity calculation for images with different text."""
+        # Create two images with completely different text
+        text_lines1 = ["Hello World", "This is a test", "Page comparison"]
+        text_lines2 = ["Goodbye Universe", "This is not a test", "Document analysis"]
+        img1 = self.create_test_image_with_text(text_lines1)
+        img2 = self.create_test_image_with_text(text_lines2)
+        
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_text_similarity()
+        
+        # Different text should result in lower similarity
+        assert similarity <= 0.8, f"Expected <= 0.8 for different text, got {similarity}"
+        assert 0.0 <= similarity <= 1.0, f"Similarity should be between 0 and 1, got {similarity}"
+
+    def test_calculate_text_similarity_empty_text(self):
+        """Test text similarity calculation for images with no text."""
+        # Create images without text (just blank images)
+        img1 = self.create_test_image(200, 200, 255)  # White image
+        img2 = self.create_test_image(200, 200, 255)  # White image
+        
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_text_similarity()
+        
+        # Empty text on both images should result in perfect similarity
+        assert similarity == 1.0, f"Expected 1.0 for empty text on both images, got {similarity}"
+
+    def test_calculate_text_similarity_one_empty_text(self):
+        """Test text similarity calculation when one image has no text."""
+        # Create one image with text and one without text
+        text_lines = ["Hello World", "This is a test"]
+        img1 = self.create_test_image_with_text(text_lines)
+        img2 = self.create_test_image(200, 200, 255)  # White image (no text)
+        
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_text_similarity()
+        
+        # One image with text, one without should result in zero similarity
+        assert similarity == 0.0, f"Expected 0.0 for one empty text, got {similarity}"
+
+    def test_calculate_text_similarity_edge_cases(self):
+        """Test text similarity calculation with edge cases."""
+        # Test with 1x1 images
+        img1 = self.create_test_image(1, 1, 0)
+        img2 = self.create_test_image(1, 1, 255)
+        comparator = PageComparator(img1, img2)
+        similarity = comparator.calculate_text_similarity()
+        # Should return a valid similarity score
+        assert 0.0 <= similarity <= 1.0, f"Similarity should be between 0 and 1, got {similarity}"
